@@ -137,15 +137,15 @@ plt.close()
 print("Graphique d'évolution des clics au fil du temps créé avec succès!")
 
 
-# Création d'un graphique montrant la moyenne des clics et conversions par campagne
-print("Création du graphique des moyennes par campagne...")
+# Version améliorée du graphique des moyennes par campagne avec étiquettes dans un coin
+print("Création du graphique des moyennes par campagne avec étiquettes repositionnées...")
 
 # Calculer les moyennes par campagne
 moyennes_par_campagne = df.groupby('Campagne').agg({
     'Clics': 'mean',
     'Conversions': 'mean',
-    'Impressions': 'mean',  # Ajouté pour la taille des points
-    'Coût': 'mean'  # Ajouté pour référence
+    'Impressions': 'mean',
+    'Coût': 'mean'
 }).reset_index()
 
 # Calculer les taux de conversion pour chaque campagne
@@ -167,38 +167,34 @@ palette = {
 }
 
 # Créer le scatter plot des moyennes
-plt.scatter(
-    x=moyennes_par_campagne['Clics'],
-    y=moyennes_par_campagne['Conversions'],
-    s=moyennes_par_campagne['Impressions'] / 100,  # Taille proportionnelle aux impressions
-    c=[palette[campagne] for campagne in moyennes_par_campagne['Campagne']],  # Couleurs selon campagne
-    alpha=0.7,
-    edgecolor='white',
-    linewidth=1.5
-)
-
-# Ajouter des étiquettes pour chaque point
 for i, row in moyennes_par_campagne.iterrows():
-    plt.annotate(
-        row['Campagne'],
-        (row['Clics'], row['Conversions']),
-        xytext=(10, 5),
-        textcoords='offset points',
-        fontsize=12,
-        fontweight='bold',
-        color=palette[row['Campagne']],
-        bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.8)
+    plt.scatter(
+        x=row['Clics'],
+        y=row['Conversions'],
+        s=row['Impressions'] / 100,  # Taille proportionnelle aux impressions
+        c=palette[row['Campagne']],  # Couleur selon campagne
+        alpha=0.8,
+        edgecolor='white',
+        linewidth=1.5,
+        label=row['Campagne']
     )
-    
-    # Ajouter les informations de taux de conversion et coût
-    plt.annotate(
-        f"Tx conv: {row['Taux_Conversion']:.2f}%\nCoût/conv: {row['Coût_Par_Conversion']:.2f}",
-        (row['Clics'], row['Conversions']),
-        xytext=(10, -25),
-        textcoords='offset points',
-        fontsize=10,
-        bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="gray", alpha=0.8)
-    )
+
+# Ajouter une légende avec les informations dans un coin
+plt.legend(loc='upper left', fontsize=12, title='Campagnes', title_fontsize=14)
+
+# Créer une zone de texte pour les métriques dans le coin inférieur droit
+textbox = ''
+for i, row in moyennes_par_campagne.iterrows():
+    textbox += f"{row['Campagne']}:\n"
+    textbox += f"  • Taux de conversion: {row['Taux_Conversion']:.2f}%\n"
+    textbox += f"  • Coût par conversion: {row['Coût_Par_Conversion']:.2f}\n\n"
+
+plt.figtext(
+    0.75, 0.20,  # Position x, y (coin inférieur droit)
+    textbox,
+    fontsize=10,
+    bbox=dict(boxstyle="round,pad=0.5", fc="white", ec="gray", alpha=0.9)
+)
 
 # Ajouter une grille de référence
 plt.grid(True, linestyle='--', alpha=0.3)
@@ -224,9 +220,9 @@ plt.figtext(
 plt.tight_layout()
 
 # Sauvegarder l'image
-save_path = 'visualisations/moyennes_par_campagne.png'
+save_path = 'visualisations/moyennes_par_campagne_v2.png'
 plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor='white')
-print(f"Graphique des moyennes sauvegardé: {save_path}")
+print(f"Graphique des moyennes amélioré sauvegardé: {save_path}")
 plt.close()
 
-print("Graphique des moyennes par campagne créé avec succès!")
+print("Graphique des moyennes par campagne avec étiquettes repositionnées créé avec succès!")
