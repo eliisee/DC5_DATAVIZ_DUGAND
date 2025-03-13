@@ -84,7 +84,10 @@ else:
     print(f"Erreur: Le fichier source {fichier_source} n'existe pas.")
     print("Assurez-vous que le fichier CSV est bien dans le même dossier que ce script.")
 
-    # Créer le graphique d'évolution des clics au fil du temps
+
+
+
+# Créer le graphique d'évolution des clics au fil du temps
 print("Création du graphique d'évolution des clics au fil du temps...")
 
 # Importer la bibliothèque pour formater les dates
