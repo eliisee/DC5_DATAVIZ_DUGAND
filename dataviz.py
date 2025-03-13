@@ -137,11 +137,26 @@ plt.close()
 print("Graphique d'évolution des clics au fil du temps créé avec succès!")
 
 
-# Version modifiée du scatterplot avec échelle de conversions fixée entre 0 et 2500
-print("Création d'un scatterplot clics vs conversions avec échelle ajustée...")
+# Création d'un graphique montrant la moyenne des clics et conversions par campagne
+print("Création du graphique des moyennes par campagne...")
 
-# Créer la figure avec une taille plus grande et un fond blanc
-plt.figure(figsize=(14, 10), facecolor='white')
+# Calculer les moyennes par campagne
+moyennes_par_campagne = df.groupby('Campagne').agg({
+    'Clics': 'mean',
+    'Conversions': 'mean',
+    'Impressions': 'mean',  # Ajouté pour la taille des points
+    'Coût': 'mean'  # Ajouté pour référence
+}).reset_index()
+
+# Calculer les taux de conversion pour chaque campagne
+moyennes_par_campagne['Taux_Conversion'] = (moyennes_par_campagne['Conversions'] / moyennes_par_campagne['Clics']) * 100
+moyennes_par_campagne['Coût_Par_Conversion'] = moyennes_par_campagne['Coût'] / moyennes_par_campagne['Conversions']
+
+# Afficher les moyennes calculées
+print(moyennes_par_campagne[['Campagne', 'Clics', 'Conversions', 'Taux_Conversion', 'Coût_Par_Conversion']])
+
+# Créer la figure avec un fond blanc
+plt.figure(figsize=(12, 10), facecolor='white')
 
 # Définir une palette de couleurs distincte
 palette = {
@@ -151,73 +166,67 @@ palette = {
     'TikTok Ads': '#d62728'        # Rouge
 }
 
-# Créer le scatterplot avec des points plus grands et plus opaques
-scatter = sns.scatterplot(
-    data=df, 
-    x='Clics', 
-    y='Conversions',
-    hue='Campagne',
-    palette=palette,
-    s=100,  # Taille des points plus grande
-    alpha=0.9,  # Plus opaque
-    edgecolor='white',  # Contour blanc pour mieux distinguer les points
-    linewidth=0.5
+# Créer le scatter plot des moyennes
+plt.scatter(
+    x=moyennes_par_campagne['Clics'],
+    y=moyennes_par_campagne['Conversions'],
+    s=moyennes_par_campagne['Impressions'] / 100,  # Taille proportionnelle aux impressions
+    c=[palette[campagne] for campagne in moyennes_par_campagne['Campagne']],  # Couleurs selon campagne
+    alpha=0.7,
+    edgecolor='white',
+    linewidth=1.5
 )
 
-# Ajouter une ligne de tendance pour l'ensemble des données
-sns.regplot(
-    x='Clics', 
-    y='Conversions', 
-    data=df,
-    scatter=False,
-    color='gray',
-    line_kws={"linestyle":"--", "linewidth":2}
-)
-
-# Titre et labels plus clairs
-plt.title('Relation entre clics et conversions par campagne', fontsize=22, pad=20, fontweight='bold')
-plt.xlabel('Nombre de clics', fontsize=18, labelpad=15)
-plt.ylabel('Nombre de conversions', fontsize=18, labelpad=15)
-
-# Améliorer la grille
-plt.grid(True, linestyle='--', alpha=0.3, color='gray')
-
-# Améliorer les ticks des axes
-plt.xticks(fontsize=14)
-plt.yticks(fontsize=14)
-
-# Fixer l'échelle des conversions entre 0 et 2500
-plt.ylim(0, 300)
-
-# Calculer le taux de conversion moyen pour chaque campagne
-conversion_rates = df.groupby('Campagne').apply(lambda x: (x['Conversions'].sum() / x['Clics'].sum()) * 100)
-print("Taux de conversion par campagne:")
-for campagne, taux in conversion_rates.items():
-    print(f"  - {campagne}: {taux:.2f}%")
-
-# Ajouter cette information au graphique
-y_pos = 0.92
-for campagne, taux in conversion_rates.items():
+# Ajouter des étiquettes pour chaque point
+for i, row in moyennes_par_campagne.iterrows():
     plt.annotate(
-        f"{campagne}: {taux:.2f}% de conversion", 
-        xy=(0.02, y_pos), 
-        xycoords='axes fraction',
+        row['Campagne'],
+        (row['Clics'], row['Conversions']),
+        xytext=(10, 5),
+        textcoords='offset points',
         fontsize=12,
-        color=palette.get(campagne, 'black'),
+        fontweight='bold',
+        color=palette[row['Campagne']],
         bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.8)
     )
-    y_pos -= 0.05
+    
+    # Ajouter les informations de taux de conversion et coût
+    plt.annotate(
+        f"Tx conv: {row['Taux_Conversion']:.2f}%\nCoût/conv: {row['Coût_Par_Conversion']:.2f}",
+        (row['Clics'], row['Conversions']),
+        xytext=(10, -25),
+        textcoords='offset points',
+        fontsize=10,
+        bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="gray", alpha=0.8)
+    )
 
-# Légende améliorée
-plt.legend(title='Campagne', fontsize=12, title_fontsize=14, loc='upper right')
+# Ajouter une grille de référence
+plt.grid(True, linestyle='--', alpha=0.3)
+
+# Ajouter des titres et étiquettes
+plt.title('Moyenne des clics et conversions par campagne', fontsize=20, pad=20)
+plt.xlabel('Moyenne des clics par campagne', fontsize=14, labelpad=10)
+plt.ylabel('Moyenne des conversions par campagne', fontsize=14, labelpad=10)
+
+# Ajuster les limites des axes pour une meilleure visualisation
+plt.xlim(moyennes_par_campagne['Clics'].min() * 0.9, moyennes_par_campagne['Clics'].max() * 1.1)
+plt.ylim(moyennes_par_campagne['Conversions'].min() * 0.9, moyennes_par_campagne['Conversions'].max() * 1.1)
+
+# Ajouter une note explicative
+plt.figtext(
+    0.5, 0.01, 
+    "Note: La taille des cercles est proportionnelle au nombre moyen d'impressions", 
+    ha='center', fontsize=10, 
+    bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.8)
+)
 
 # Améliorer le layout
 plt.tight_layout()
 
-# Sauvegarder l'image avec une meilleure résolution
-save_path = 'visualisations/scatter_clics_conversions_ameliore.png'
+# Sauvegarder l'image
+save_path = 'visualisations/moyennes_par_campagne.png'
 plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor='white')
-print(f"Scatterplot amélioré sauvegardé: {save_path}")
+print(f"Graphique des moyennes sauvegardé: {save_path}")
 plt.close()
 
-print("Scatterplot clics vs conversions amélioré créé avec succès!")
+print("Graphique des moyennes par campagne créé avec succès!")
