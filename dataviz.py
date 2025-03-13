@@ -187,7 +187,7 @@ plt.xticks(fontsize=14)
 plt.yticks(fontsize=14)
 
 # Fixer l'échelle des conversions entre 0 et 2500
-plt.ylim(0, 2500)
+plt.ylim(0, 700)
 
 # Calculer le taux de conversion moyen pour chaque campagne
 conversion_rates = df.groupby('Campagne').apply(lambda x: (x['Conversions'].sum() / x['Clics'].sum()) * 100)
