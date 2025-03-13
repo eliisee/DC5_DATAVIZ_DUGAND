@@ -135,3 +135,63 @@ print(f"Graphique d'évolution sauvegardé: {save_path}")
 plt.close()
 
 print("Graphique d'évolution des clics au fil du temps créé avec succès!")
+
+
+# Créer le scatterplot des clics vs conversions
+print("Création du scatterplot clics vs conversions...")
+
+# Regrouper par campagne et jour pour avoir des données agrégées
+df_agg = df.groupby(['Campagne', df['Date'].dt.date]).agg({
+    'Clics': 'sum',
+    'Conversions': 'sum'
+}).reset_index()
+
+# Créer la figure
+plt.figure(figsize=(14, 10))
+
+# Créer le scatterplot
+scatter = sns.scatterplot(
+    data=df_agg, 
+    x='Clics', 
+    y='Conversions',
+    hue='Campagne',  # Colorer par campagne
+    size='Conversions',  # Taille selon conversions
+    sizes=(50, 400),
+    alpha=0.7
+)
+
+# Ajouter les titres et labels
+plt.title('Relation entre clics et conversions par campagne', fontsize=20, pad=20)
+plt.xlabel('Nombre de clics', fontsize=16, labelpad=10)
+plt.ylabel('Nombre de conversions', fontsize=16, labelpad=10)
+
+# Ajouter une grille
+plt.grid(True, linestyle='--', alpha=0.5)
+
+# Ajouter des lignes de régression par campagne
+for campagne in df_agg['Campagne'].unique():
+    subset = df_agg[df_agg['Campagne'] == campagne]
+    # Seulement si nous avons suffisamment de points
+    if len(subset) > 2:
+        sns.regplot(x='Clics', y='Conversions', data=subset, 
+                   scatter=False, ax=scatter, line_kws={"linestyle":"--"})
+
+# Calculer la corrélation globale
+corr = df_agg[['Clics', 'Conversions']].corr().iloc[0,1]
+plt.annotate(f'Corrélation globale: {corr:.2f}', 
+            xy=(0.05, 0.95), xycoords='axes fraction',
+            bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.8))
+
+# Améliorer la légende
+plt.legend(title='Campagne', fontsize=10, title_fontsize=12)
+
+# Améliorer le layout
+plt.tight_layout()
+
+# Sauvegarder l'image
+save_path = 'visualisations/scatter_clics_conversions.png'
+plt.savefig(save_path, dpi=300, bbox_inches='tight')
+print(f"Scatterplot sauvegardé: {save_path}")
+plt.close()
+
+print("Scatterplot clics vs conversions créé avec succès!")
