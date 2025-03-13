@@ -137,8 +137,8 @@ plt.close()
 print("Graphique d'évolution des clics au fil du temps créé avec succès!")
 
 
-# Version améliorée du scatterplot clics vs conversions avec échelle réduite
-print("Création d'un scatterplot clics vs conversions amélioré...")
+# Version modifiée du scatterplot avec échelle de conversions fixée entre 0 et 2500
+print("Création d'un scatterplot clics vs conversions avec échelle ajustée...")
 
 # Créer la figure avec une taille plus grande et un fond blanc
 plt.figure(figsize=(14, 10), facecolor='white')
@@ -186,10 +186,8 @@ plt.grid(True, linestyle='--', alpha=0.3, color='gray')
 plt.xticks(fontsize=14)
 plt.yticks(fontsize=14)
 
-# Limiter l'échelle de l'axe y pour réduire l'échelle des conversions
-# Vous pouvez ajuster ces valeurs en fonction de votre dataset
-y_max = df['Conversions'].quantile(0.95)  # Utilisez le 95e percentile pour exclure les valeurs extrêmes
-plt.ylim(0, y_max)
+# Fixer l'échelle des conversions entre 0 et 2500
+plt.ylim(0, 2500)
 
 # Calculer le taux de conversion moyen pour chaque campagne
 conversion_rates = df.groupby('Campagne').apply(lambda x: (x['Conversions'].sum() / x['Clics'].sum()) * 100)
