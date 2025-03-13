@@ -83,3 +83,52 @@ if os.path.exists(fichier_source):
 else:
     print(f"Erreur: Le fichier source {fichier_source} n'existe pas.")
     print("Assurez-vous que le fichier CSV est bien dans le même dossier que ce script.")
+
+    # Créer le graphique d'évolution des clics au fil du temps
+print("Création du graphique d'évolution des clics au fil du temps...")
+
+# Importer la bibliothèque pour formater les dates
+import matplotlib.dates as mdates
+
+# Regrouper les données par jour et sommer les clics
+df_daily = df.groupby(df['Date'].dt.date).agg({'Clics': 'sum'}).reset_index()
+
+# Créer la figure
+plt.figure(figsize=(16, 8))
+
+# Créer le graphique
+plt.plot(df_daily['Date'], df_daily['Clics'], marker='o', linestyle='-', 
+         color='#1f77b4', linewidth=2, markersize=8)
+
+# Ajouter les titres et labels
+plt.title('Évolution des clics au fil du temps', fontsize=20, pad=20)
+plt.xlabel('Date', fontsize=16, labelpad=10)
+plt.ylabel('Nombre de clics', fontsize=16, labelpad=10)
+
+# Configurer l'axe des dates
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=2))  # Ajuster l'intervalle selon vos données
+plt.xticks(rotation=45, ha='right', fontsize=12)
+
+# Ajouter une grille
+plt.grid(True, linestyle='--', alpha=0.7)
+
+# Ajouter une ligne de tendance
+z = np.polyfit(range(len(df_daily['Date'])), df_daily['Clics'], 1)
+p = np.poly1d(z)
+plt.plot(df_daily['Date'], p(range(len(df_daily['Date']))), "r--", linewidth=2, 
+         label=f'Tendance: {z[0]:.2f}x + {z[1]:.2f}')
+
+# Ajouter une légende
+plt.legend(fontsize=12)
+
+# Améliorer le layout
+plt.tight_layout()
+
+# Sauvegarder l'image
+save_path = 'visualisations/evolution_clics.png'
+plt.savefig(save_path, dpi=300, bbox_inches='tight')
+print(f"Graphique d'évolution sauvegardé: {save_path}")
+plt.close()
+
+print("Graphique d'évolution des clics au fil du temps créé avec succès!")
