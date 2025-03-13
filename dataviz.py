@@ -10,137 +10,76 @@ sns.set(font_scale=1.2)
 plt.rcParams['figure.figsize'] = (12, 8)
 plt.rcParams['font.family'] = 'sans-serif'
 
-def nettoyer_dataset(csv_path, output_path=None):
-    """
-    Nettoie le dataset marketing et retourne un DataFrame propre
-    
-    Args:
-        csv_path: Chemin vers le fichier CSV
-        output_path: Chemin où sauvegarder le fichier nettoyé (optionnel)
-        
-    Returns:
-        DataFrame pandas nettoyé
-    """
-    print(f"Chargement du fichier: {csv_path}")
-    
-    # Vérifier si le fichier existe
-    if not os.path.exists(csv_path):
-        print(f"Erreur: Le fichier {csv_path} n'existe pas")
-        return None
-    
-    try:
-        # Charger le dataset
-        df = pd.read_csv(csv_path)
-        
-        # Afficher les informations initiales
-        print("\n--- INFORMATIONS INITIALES ---")
-        print(f"Dimensions: {df.shape}")
-        print("\nAperçu des données:")
-        print(df.head())
-        print("\nTypes de données:")
-        print(df.dtypes)
-        print("\nStatistiques descriptives:")
-        print(df.describe())
-        print("\nValeurs manquantes:")
-        print(df.isnull().sum())
-        
-        print("\n--- NETTOYAGE DES DONNÉES ---")
-        
-        # 1. Convertir la colonne Date en datetime
-        print("Conversion de la colonne Date en format datetime...")
-        df['Date'] = pd.to_datetime(df['Date'])
-        
-        # 2. Extraire des composantes de date utiles
-        print("Extraction des composantes de date...")
-        df['Jour'] = df['Date'].dt.date
-        df['Heure'] = df['Date'].dt.hour
-        df['Mois'] = df['Date'].dt.month
-        df['Année'] = df['Date'].dt.year
-        
-        # 3. Traiter les valeurs manquantes
-        print("Traitement des valeurs manquantes...")
-        colonnes_numeriques = ['Impressions', 'Clics', 'Conversions', 'Coût']
-        for col in colonnes_numeriques:
-            missing_count = df[col].isnull().sum()
-            if missing_count > 0:
-                median_val = df[col].median()
-                print(f"  - {missing_count} valeurs manquantes dans '{col}', remplacées par la médiane ({median_val:.2f})")
-                df[col] = df[col].fillna(median_val)
-        
-        # 4. Créer des métriques dérivées
-        print("Création de métriques dérivées...")
-        # Taux de clics (CTR)
-        df['CTR'] = (df['Clics'] / df['Impressions']) * 100
-        # Taux de conversion (CVR)
-        df['CVR'] = (df['Conversions'] / df['Clics']) * 100
-        # Coût par clic (CPC)
-        df['CPC'] = df['Coût'] / df['Clics']
-        # Coût par conversion (CPA)
-        df['CPA'] = df['Coût'] / df['Conversions']
-        
-        # 5. Remplacer les valeurs infinies par NaN puis par 0
-        print("Traitement des valeurs infinies...")
-        df = df.replace([np.inf, -np.inf], np.nan)
-        inf_count = df.isna().sum().sum() - df.isna().sum().sum()
-        if inf_count > 0:
-            print(f"  - {inf_count} valeurs infinies remplacées")
-        df = df.fillna(0)
-        
-        # 6. Supprimer la colonne inutile
-        print("Suppression de la colonne 'Inutile'...")
-        if 'Inutile' in df.columns:
-            df = df.drop('Inutile', axis=1)
-        
-        # 7. Vérifier les doublons
-        duplicates = df.duplicated().sum()
-        if duplicates > 0:
-            print(f"Suppression de {duplicates} lignes dupliquées...")
-            df = df.drop_duplicates()
-        
-        # 8. Vérifier les valeurs aberrantes (outliers)
-        print("Vérification des valeurs aberrantes...")
-        for col in colonnes_numeriques:
-            Q1 = df[col].quantile(0.25)
-            Q3 = df[col].quantile(0.75)
-            IQR = Q3 - Q1
-            lower_bound = Q1 - 1.5 * IQR
-            upper_bound = Q3 + 1.5 * IQR
-            outliers = ((df[col] < lower_bound) | (df[col] > upper_bound)).sum()
-            if outliers > 0:
-                print(f"  - {outliers} valeurs aberrantes détectées dans '{col}'")
-                # Note: On garde les outliers pour l'instant, mais on peut les traiter si nécessaire
-        
-        # Afficher des informations sur le dataset nettoyé
-        print("\n--- RÉSULTAT DU NETTOYAGE ---")
-        print(f"Dimensions finales: {df.shape}")
-        print("\nNouvelles colonnes:")
-        print(df.columns.tolist())
-        print("\nAperçu des données nettoyées:")
-        print(df.head())
-        
-        # Sauvegarder le fichier nettoyé si demandé
-        if output_path:
-            print(f"\nSauvegarde du dataset nettoyé dans: {output_path}")
-            df.to_csv(output_path, index=False)
-        
-        return df
-        
-    except Exception as e:
-        print(f"Erreur lors du nettoyage des données: {str(e)}")
-        return None
+# Avez-vous le fichier source dataset_marketing_dataviz.csv?
+fichier_source = "dataset_marketing_dataviz.csv"
 
-# Si exécuté directement
-if __name__ == "__main__":
-    # Remplacez par le chemin de votre fichier
-    fichier_csv = "dataset_marketing_dataviz.csv"
-    fichier_nettoye = "dataset_marketing_clean.csv"
+# Vérifier si le fichier source existe
+if os.path.exists(fichier_source):
+    print(f"Chargement du fichier source: {fichier_source}")
     
-    # Nettoyer le dataset
-    df_clean = nettoyer_dataset(fichier_csv, fichier_nettoye)
+    # Nettoyer les données
+    df = pd.read_csv(fichier_source)
     
-    if df_clean is not None:
-        print("✅ Nettoyage terminé avec succès!")
-    else:
-        print("❌ Échec du nettoyage des données")
-        
-
+    # Convertir la colonne Date en datetime
+    df['Date'] = pd.to_datetime(df['Date'])
+    
+    # Traiter les valeurs manquantes
+    for col in ['Impressions', 'Clics', 'Conversions', 'Coût']:
+        if df[col].isnull().sum() > 0:
+            median_value = df[col].median()
+            df[col] = df[col].fillna(median_value)
+    
+    # Supprimer la colonne inutile si elle existe
+    if 'Inutile' in df.columns:
+        df = df.drop('Inutile', axis=1)
+    
+    print("Données nettoyées avec succès")
+    
+    # Créer le dossier pour les visualisations
+    if not os.path.exists('visualisations'):
+        os.makedirs('visualisations')
+        print("Dossier 'visualisations' créé")
+    
+    # Créer l'histogramme
+    print("Création de l'histogramme des impressions par campagne...")
+    
+    # Regrouper les données par campagne et sommer les impressions
+    impressions_par_campagne = df.groupby('Campagne')['Impressions'].sum().sort_values(ascending=False)
+    
+    # Créer la figure
+    plt.figure(figsize=(14, 10))
+    
+    # Créer une palette de couleurs dégradée
+    colors = sns.color_palette("viridis", len(impressions_par_campagne))
+    
+    # Créer le graphique
+    ax = sns.barplot(x=impressions_par_campagne.index, y=impressions_par_campagne.values, palette=colors)
+    
+    # Ajouter les titres et labels
+    plt.title('Histogramme des impressions par campagne', fontsize=20, pad=20)
+    plt.xlabel('Campagne', fontsize=16, labelpad=10)
+    plt.ylabel('Nombre total d\'impressions', fontsize=16, labelpad=10)
+    
+    # Rotation des étiquettes de l'axe x
+    plt.xticks(rotation=45, ha='right', fontsize=12)
+    
+    # Ajouter une grille
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    
+    # Ajouter les valeurs sur les barres
+    for i, v in enumerate(impressions_par_campagne.values):
+        ax.text(i, v + v*0.01, f'{v:,.0f}', ha='center', fontsize=12)
+    
+    # Améliorer le layout
+    plt.tight_layout()
+    
+    # Sauvegarder l'image
+    save_path = 'visualisations/histogramme_impressions.png'
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    print(f"Histogramme sauvegardé: {save_path}")
+    plt.close()
+    
+    print("Histogramme des impressions par campagne créé avec succès!")
+else:
+    print(f"Erreur: Le fichier source {fichier_source} n'existe pas.")
+    print("Assurez-vous que le fichier CSV est bien dans le même dossier que ce script.")
