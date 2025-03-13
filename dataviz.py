@@ -137,61 +137,84 @@ plt.close()
 print("Graphique d'évolution des clics au fil du temps créé avec succès!")
 
 
-# Créer le scatterplot des clics vs conversions
-print("Création du scatterplot clics vs conversions...")
+# Version améliorée du scatterplot clics vs conversions
+print("Création d'un scatterplot clics vs conversions amélioré...")
 
-# Regrouper par campagne et jour pour avoir des données agrégées
-df_agg = df.groupby(['Campagne', df['Date'].dt.date]).agg({
-    'Clics': 'sum',
-    'Conversions': 'sum'
-}).reset_index()
+# Créer la figure avec une taille plus grande et un fond blanc
+plt.figure(figsize=(14, 10), facecolor='white')
 
-# Créer la figure
-plt.figure(figsize=(14, 10))
+# Définir une palette de couleurs distincte
+palette = {
+    'Email Marketing': '#1f77b4',  # Bleu
+    'Facebook Ads': '#ff7f0e',     # Orange
+    'Google Ads': '#2ca02c',       # Vert
+    'TikTok Ads': '#d62728'        # Rouge
+}
 
-# Créer le scatterplot
+# Créer le scatterplot avec des points plus grands et plus opaques
 scatter = sns.scatterplot(
-    data=df_agg, 
+    data=df, 
     x='Clics', 
     y='Conversions',
-    hue='Campagne',  # Colorer par campagne
-    size='Conversions',  # Taille selon conversions
-    sizes=(50, 400),
-    alpha=0.7
+    hue='Campagne',
+    palette=palette,
+    s=100,  # Taille des points plus grande
+    alpha=0.9,  # Plus opaque
+    edgecolor='white',  # Contour blanc pour mieux distinguer les points
+    linewidth=0.5
 )
 
-# Ajouter les titres et labels
-plt.title('Relation entre clics et conversions par campagne', fontsize=20, pad=20)
-plt.xlabel('Nombre de clics', fontsize=16, labelpad=10)
-plt.ylabel('Nombre de conversions', fontsize=16, labelpad=10)
+# Ajouter une ligne de tendance pour l'ensemble des données
+sns.regplot(
+    x='Clics', 
+    y='Conversions', 
+    data=df,
+    scatter=False,
+    color='gray',
+    line_kws={"linestyle":"--", "linewidth":2}
+)
 
-# Ajouter une grille
-plt.grid(True, linestyle='--', alpha=0.5)
+# Titre et labels plus clairs
+plt.title('Relation entre clics et conversions par campagne', fontsize=22, pad=20, fontweight='bold')
+plt.xlabel('Nombre de clics', fontsize=18, labelpad=15)
+plt.ylabel('Nombre de conversions', fontsize=18, labelpad=15)
 
-# Ajouter des lignes de régression par campagne
-for campagne in df_agg['Campagne'].unique():
-    subset = df_agg[df_agg['Campagne'] == campagne]
-    # Seulement si nous avons suffisamment de points
-    if len(subset) > 2:
-        sns.regplot(x='Clics', y='Conversions', data=subset, 
-                   scatter=False, ax=scatter, line_kws={"linestyle":"--"})
+# Améliorer la grille
+plt.grid(True, linestyle='--', alpha=0.3, color='gray')
 
-# Calculer la corrélation globale
-corr = df_agg[['Clics', 'Conversions']].corr().iloc[0,1]
-plt.annotate(f'Corrélation globale: {corr:.2f}', 
-            xy=(0.05, 0.95), xycoords='axes fraction',
-            bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.8))
+# Améliorer les ticks des axes
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 
-# Améliorer la légende
-plt.legend(title='Campagne', fontsize=10, title_fontsize=12)
+# Calculer le taux de conversion moyen pour chaque campagne
+conversion_rates = df.groupby('Campagne').apply(lambda x: (x['Conversions'].sum() / x['Clics'].sum()) * 100)
+print("Taux de conversion par campagne:")
+for campagne, taux in conversion_rates.items():
+    print(f"  - {campagne}: {taux:.2f}%")
+
+# Ajouter cette information au graphique
+y_pos = 0.92
+for campagne, taux in conversion_rates.items():
+    plt.annotate(
+        f"{campagne}: {taux:.2f}% de conversion", 
+        xy=(0.02, y_pos), 
+        xycoords='axes fraction',
+        fontsize=12,
+        color=palette.get(campagne, 'black'),
+        bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.8)
+    )
+    y_pos -= 0.05
+
+# Légende améliorée
+plt.legend(title='Campagne', fontsize=12, title_fontsize=14, loc='upper right')
 
 # Améliorer le layout
 plt.tight_layout()
 
-# Sauvegarder l'image
-save_path = 'visualisations/scatter_clics_conversions.png'
-plt.savefig(save_path, dpi=300, bbox_inches='tight')
-print(f"Scatterplot sauvegardé: {save_path}")
+# Sauvegarder l'image avec une meilleure résolution
+save_path = 'visualisations/scatter_clics_conversions_ameliore.png'
+plt.savefig(save_path, dpi=300, bbox_inches='tight', facecolor='white')
+print(f"Scatterplot amélioré sauvegardé: {save_path}")
 plt.close()
 
-print("Scatterplot clics vs conversions créé avec succès!")
+print("Scatterplot clics vs conversions amélioré créé avec succès!")
